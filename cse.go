@@ -80,7 +80,7 @@ type Client struct {
 	gp *tikv.Spool
 }
 
-func NewCSEClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
+func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
 	}

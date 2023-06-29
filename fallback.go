@@ -77,7 +77,7 @@ func NewClientWithFallback(client pd.Client, cbOpt *CBOptions) (*ClientWithFallb
 	f := &ClientWithFallback{
 		Client: client,
 	}
-	cse, err := NewCSEClient(client, cbOpt)
+	cse, err := NewClient(client, cbOpt)
 	if err != nil {
 		return nil, err
 	}
