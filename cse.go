@@ -31,8 +31,8 @@ import (
 	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
-	"github.com/tikv/client-go/v2/tikv"
 	"github.com/tikv/client-go/v2/tikvrpc"
+	"github.com/tikv/client-go/v2/util"
 	"github.com/tikv/client-go/v2/util/codec"
 	pd "github.com/tikv/pd/client"
 	pdcore "github.com/tikv/pd/pkg/core"
@@ -77,7 +77,7 @@ type Client struct {
 
 	httpClient *http.Client
 
-	gp *tikv.Spool
+	gp *util.Spool
 }
 
 func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
@@ -96,7 +96,7 @@ func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
 			Transport: &http.Transport{},
 		},
 
-		gp: tikv.NewSpool(32, time.Second*10),
+		gp: util.NewSpool(32, time.Second*10),
 	}
 	c.mu.stores = make(map[uint64]*store)
 	err = c.refreshStores()
