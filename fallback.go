@@ -16,6 +16,7 @@ package cse
 
 import (
 	"context"
+	"crypto/tls"
 	"time"
 
 	"github.com/pingcap/kvproto/pkg/metapb"
@@ -69,7 +70,7 @@ func probePD(name string, client pd.Client, timeout time.Duration) error {
 	return err
 }
 
-func NewClientWithFallback(client pd.Client, cbOpt *CBOptions) (*ClientWithFallback, error) {
+func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (*ClientWithFallback, error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
 	}
@@ -77,7 +78,7 @@ func NewClientWithFallback(client pd.Client, cbOpt *CBOptions) (*ClientWithFallb
 	f := &ClientWithFallback{
 		Client: client,
 	}
-	cse, err := NewClient(client, cbOpt)
+	cse, err := NewClient(client, tlsConfig, cbOpt)
 	if err != nil {
 		return nil, err
 	}

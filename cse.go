@@ -17,6 +17,7 @@ package cse
 import (
 	"bytes"
 	"context"
+	"crypto/tls"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
@@ -76,11 +77,12 @@ type Client struct {
 	}
 
 	httpClient *http.Client
+	scheme     string
 
 	gp *util.Spool
 }
 
-func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
+func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (c *Client, err error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
 	}
@@ -93,10 +95,18 @@ func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
 		cbOpt: cbOpt,
 
 		httpClient: &http.Client{
-			Transport: &http.Transport{},
+			Transport: &http.Transport{
+				TLSClientConfig: tlsConfig,
+			},
 		},
 
 		gp: util.NewSpool(32, time.Second*10),
+	}
+
+	if tlsConfig != nil {
+		c.scheme = "https"
+	} else {
+		c.scheme = "http"
 	}
 	c.mu.stores = make(map[uint64]*store)
 	err = c.refreshStores()
@@ -107,10 +117,14 @@ func NewClient(origin pd.Client, cbOpt *CBOptions) (c *Client, err error) {
 	return c, nil
 }
 
+func (c *Client) buildUrl(endpoint string) string {
+	return fmt.Sprintf("%s://%s", c.scheme, endpoint)
+}
+
 func (c *Client) probeStoreStatus(name string, addr string, timeout time.Duration) error {
 	ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	defer cancel()
-	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("http://%s", addr), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, c.buildUrl(addr), nil)
 	if err != nil {
 		return err
 	}
@@ -294,7 +308,12 @@ func (c *Client) fanout(ctx context.Context, tag, method, endpoint string, req a
 				rchan <- mkErr(index, err)
 				return
 			}
-			req, err := http.NewRequestWithContext(ctx, method, fmt.Sprintf("http://%s/%s", store.StatusAddress, endpoint), buf)
+			req, err := http.NewRequestWithContext(
+				ctx,
+				method,
+				c.buildUrl(fmt.Sprintf("%s/%s", store.StatusAddress, endpoint)),
+				buf,
+			)
 			if err != nil {
 				rchan <- mkErr(index, err)
 				return
