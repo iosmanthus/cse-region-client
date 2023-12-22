@@ -32,8 +32,8 @@ import (
 	"github.com/pingcap/kvproto/pkg/pdpb"
 	"github.com/pingcap/log"
 	"github.com/pkg/errors"
+	"github.com/tikv/client-go/v2/tikv"
 	"github.com/tikv/client-go/v2/tikvrpc"
-	"github.com/tikv/client-go/v2/util"
 	"github.com/tikv/client-go/v2/util/codec"
 	pd "github.com/tikv/pd/client"
 	pdcore "github.com/tikv/pd/pkg/core"
@@ -79,7 +79,7 @@ type Client struct {
 	httpClient *http.Client
 	scheme     string
 
-	gp *util.Spool
+	gp *tikv.Spool
 }
 
 func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (c *Client, err error) {
@@ -100,7 +100,7 @@ func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (c *Cl
 			},
 		},
 
-		gp: util.NewSpool(32, time.Second*10),
+		gp: tikv.NewSpool(32, time.Second*10),
 	}
 
 	if tlsConfig != nil {
@@ -501,7 +501,7 @@ func (c *Client) GetRegionByID(ctx context.Context, regionID uint64, _ ...pd.Get
 	return mkPDRegions(region)[0], nil
 }
 
-func (c *Client) ScanRegions(ctx context.Context, startKey, endKey []byte, limit int) ([]*pd.Region, error) {
+func (c *Client) ScanRegions(ctx context.Context, startKey, endKey []byte, limit int, _ ...pd.GetRegionOption) ([]*pd.Region, error) {
 	ctx = withReqID(ctx)
 	reqID := getReqID(ctx)
 	if limit <= 0 {

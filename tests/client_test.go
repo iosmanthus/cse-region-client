@@ -31,7 +31,7 @@ type cseSuite struct {
 func (s *cseSuite) SetupTest() {
 	pdCli, err := pd.NewClient(strings.Split(*pdAddrs, ","), pd.SecurityOption{})
 	s.Nil(err)
-	pdCli, err = cse.NewClient(pdCli, nil)
+	pdCli, err = cse.NewClient(pdCli, nil, nil)
 	s.Nil(err)
 	s.pdCli = tikv.NewCodecPDClient(tikv.ModeTxn, pdCli)
 }
@@ -78,7 +78,7 @@ func BenchmarkGetRegionByCSE(b *testing.B) {
 	if err != nil {
 		b.Fatal(err)
 	}
-	pdCli, err = cse.NewClient(pdCli, nil)
+	pdCli, err = cse.NewClient(pdCli, nil, nil)
 	if err != nil {
 		b.Fatal(err)
 	}

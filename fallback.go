@@ -132,14 +132,14 @@ func (f *ClientWithFallback) GetRegionByID(ctx context.Context, regionID uint64,
 	return f.cse.GetRegionByID(ctx, regionID, opts...)
 }
 
-func (f *ClientWithFallback) ScanRegions(ctx context.Context, key, endKey []byte, limit int) ([]*pd.Region, error) {
+func (f *ClientWithFallback) ScanRegions(ctx context.Context, key, endKey []byte, limit int, opts ...pd.GetRegionOption) ([]*pd.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
-		return f.Client.ScanRegions(ctx, key, endKey, limit)
+		return f.Client.ScanRegions(ctx, key, endKey, limit, opts...)
 	})
 	if err == nil {
 		return resp.([]*pd.Region), nil
 	}
-	return f.cse.ScanRegions(ctx, key, endKey, limit)
+	return f.cse.ScanRegions(ctx, key, endKey, limit, opts...)
 }
 
 func (f *ClientWithFallback) GetStore(ctx context.Context, storeID uint64) (*metapb.Store, error) {
