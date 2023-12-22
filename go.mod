@@ -10,7 +10,7 @@ require (
 	github.com/prometheus/client_golang v1.15.1
 	github.com/sony/gobreaker v0.5.0
 	github.com/stretchr/testify v1.8.4
-	github.com/tikv/client-go/v2 v2.0.7
+	github.com/tikv/client-go/v2 v2.0.8-0.20231222073858-605dbe8a5434
 	github.com/tikv/pd v0.0.0-20230420042919-0e0313adef1f
 	github.com/tikv/pd/client v0.0.0-20231219031951-25f48f0bdd27
 	go.uber.org/zap v1.26.0
@@ -65,5 +65,3 @@ require (
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-replace github.com/tikv/client-go/v2 => /home/iosmanthus/projects/db/go-flake/client-go

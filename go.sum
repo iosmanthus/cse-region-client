@@ -154,6 +154,8 @@ github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965 h1:1oFLiOyVl+W7
 github.com/syndtr/goleveldb v1.0.1-0.20190318030020-c3a204f8e965/go.mod h1:9OrXJhf154huy1nPWmuSrkgjPUtUNhA+Zmy+6AESzuA=
 github.com/tiancaiamao/gp v0.0.0-20221230034425-4025bc8a4d4a h1:J/YdBZ46WKpXsxsW93SG+q0F8KI+yFrcIDT4c/RNoc4=
 github.com/tiancaiamao/gp v0.0.0-20221230034425-4025bc8a4d4a/go.mod h1:h4xBhSNtOeEosLJ4P7JyKXX7Cabg7AVkWCK5gV2vOrM=
+github.com/tikv/client-go/v2 v2.0.8-0.20231222073858-605dbe8a5434 h1:rd2XRpNKp2+skhLhVMvw3FrRMkshkJiymqIfjUZXKHo=
+github.com/tikv/client-go/v2 v2.0.8-0.20231222073858-605dbe8a5434/go.mod h1:IE0/o4zWJW5Wpvp15CK2jpbu49DSLLSJBMNmwjv6I6o=
 github.com/tikv/pd v0.0.0-20230420042919-0e0313adef1f h1:1BBlbLSCua+oK3xngEjPO2dj1oLcItJxhCzqYG6XANA=
 github.com/tikv/pd v0.0.0-20230420042919-0e0313adef1f/go.mod h1:2hGdvUNGLaCKLbEXC8JMiQz2JsbxEDCKGDOBGJTt0NQ=
 github.com/tikv/pd/client v0.0.0-20231219031951-25f48f0bdd27 h1:U8jPVwFu9Zu8tXYlmOxO/Zv3OcsgoJ/COSwMNWvED9c=
