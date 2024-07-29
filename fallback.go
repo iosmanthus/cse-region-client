@@ -70,7 +70,7 @@ func probePD(name string, client pd.Client, timeout time.Duration) error {
 	return err
 }
 
-func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (*ClientWithFallback, error) {
+func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (pd.Client, error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
 	}

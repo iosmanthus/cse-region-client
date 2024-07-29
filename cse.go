@@ -82,12 +82,12 @@ type Client struct {
 	gp *tikv.Spool
 }
 
-func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (c *Client, err error) {
+func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (pd.Client, error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
 	}
 
-	c = &Client{
+	c := &Client{
 		Client: origin,
 
 		done: make(chan struct{}, 1),
@@ -109,7 +109,7 @@ func NewClient(origin pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (c *Cl
 		c.scheme = "http"
 	}
 	c.mu.stores = make(map[uint64]*store)
-	err = c.refreshStores()
+	err := c.refreshStores()
 	if err != nil {
 		return nil, err
 	}
