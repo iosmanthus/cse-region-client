@@ -146,11 +146,11 @@ func (c *Client) updateStores(stores []*metapb.Store) {
 
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	// remove tombstone stores.
+
+	// stop probing tombstone stores.
 	for id, s := range c.mu.stores {
 		if _, ok := latestStores[id]; !ok {
 			s.breaker.Close()
-			delete(c.mu.stores, id)
 		}
 	}
 
