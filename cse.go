@@ -64,6 +64,13 @@ type store struct {
 	breaker *asyncBreaker
 }
 
+func (s *store) Close() {
+	if s.breaker != nil {
+		s.breaker.Close()
+		s.breaker = nil
+	}
+}
+
 type Client struct {
 	pd.Client
 
@@ -150,7 +157,7 @@ func (c *Client) updateStores(stores []*metapb.Store) {
 	// stop probing tombstone stores.
 	for id, s := range c.mu.stores {
 		if _, ok := latestStores[id]; !ok {
-			s.breaker.Close()
+			s.Close()
 		}
 	}
 
@@ -233,7 +240,7 @@ func (c *Client) Close() {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 	for _, s := range c.mu.stores {
-		s.breaker.Close()
+		s.Close()
 		delete(c.mu.stores, s.GetId())
 	}
 }
