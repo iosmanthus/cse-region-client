@@ -16,6 +16,7 @@ package cse
 
 import (
 	"errors"
+	"sync"
 	"sync/atomic"
 	"time"
 
@@ -35,6 +36,7 @@ type asyncBreaker struct {
 	cb    *gobreaker.CircuitBreaker
 	state uint32
 	done  chan struct{}
+	once  sync.Once
 
 	probeInterval time.Duration
 }
@@ -75,8 +77,10 @@ func newAsyncBreaker(s settings) *asyncBreaker {
 }
 
 func (b *asyncBreaker) Close() {
-	b.done <- struct{}{}
-	close(b.done)
+	b.once.Do(func() {
+		b.done <- struct{}{}
+		close(b.done)
+	})
 }
 
 func (b *asyncBreaker) openWith(probe func(string) error) bool {
