@@ -36,6 +36,8 @@ import (
 	"github.com/tikv/client-go/v2/tikvrpc"
 	"github.com/tikv/client-go/v2/util/codec"
 	pd "github.com/tikv/pd/client"
+	"github.com/tikv/pd/client/clients/router"
+	"github.com/tikv/pd/client/opt"
 	pdcore "github.com/tikv/pd/pkg/core"
 	"go.uber.org/zap"
 )
@@ -198,7 +200,7 @@ func (c *Client) getAllStores() []*metapb.Store {
 }
 
 func (c *Client) refreshStores() error {
-	stores, err := c.Client.GetAllStores(context.Background(), pd.WithExcludeTombstone())
+	stores, err := c.Client.GetAllStores(context.Background(), opt.WithExcludeTombstone())
 	if err != nil {
 		return err
 	}
@@ -402,10 +404,10 @@ func (c *Client) fanout(ctx context.Context, tag, method, endpoint string, req a
 	return regionsInfo, nil
 }
 
-func mkPDRegions(regions ...*pdcore.RegionInfo) []*pd.Region {
-	rs := make([]*pd.Region, 0, len(regions))
+func mkPDRegions(regions ...*pdcore.RegionInfo) []*router.Region {
+	rs := make([]*router.Region, 0, len(regions))
 	for _, region := range regions {
-		pdRegion := &pd.Region{
+		pdRegion := &router.Region{
 			Meta:         region.GetMeta(),
 			Leader:       region.GetLeader(),
 			Buckets:      region.GetBuckets(),
@@ -430,7 +432,7 @@ func getReqID(ctx context.Context) uint64 {
 	return 0
 }
 
-func (c *Client) GetRegion(ctx context.Context, key []byte, _ ...pd.GetRegionOption) (*pd.Region, error) {
+func (c *Client) GetRegion(ctx context.Context, key []byte, _ ...opt.GetRegionOption) (*router.Region, error) {
 	ctx = withReqID(ctx)
 	reqID := getReqID(ctx)
 	_, start, err := codec.DecodeBytes(key, nil)
@@ -456,7 +458,7 @@ func (c *Client) GetRegion(ctx context.Context, key []byte, _ ...pd.GetRegionOpt
 	return resp, nil
 }
 
-func (c *Client) GetPrevRegion(ctx context.Context, key []byte, _ ...pd.GetRegionOption) (*pd.Region, error) {
+func (c *Client) GetPrevRegion(ctx context.Context, key []byte, _ ...opt.GetRegionOption) (*router.Region, error) {
 	ctx = withReqID(ctx)
 	reqID := getReqID(ctx)
 	_, start, err := codec.DecodeBytes(key, nil)
@@ -484,7 +486,7 @@ func (c *Client) GetPrevRegion(ctx context.Context, key []byte, _ ...pd.GetRegio
 	return mkPDRegions(region)[0], nil
 }
 
-func (c *Client) GetRegionByID(ctx context.Context, regionID uint64, _ ...pd.GetRegionOption) (*pd.Region, error) {
+func (c *Client) GetRegionByID(ctx context.Context, regionID uint64, _ ...opt.GetRegionOption) (*router.Region, error) {
 	ctx = withReqID(ctx)
 	reqID := getReqID(ctx)
 	regionsInfo, err := c.fanout(ctx, "GetRegionByID", http.MethodGet, "sync_region_by_id", &SyncRegionByIDRequest{
@@ -503,7 +505,7 @@ func (c *Client) GetRegionByID(ctx context.Context, regionID uint64, _ ...pd.Get
 	return mkPDRegions(region)[0], nil
 }
 
-func (c *Client) ScanRegions(ctx context.Context, startKey, endKey []byte, limit int, _ ...pd.GetRegionOption) ([]*pd.Region, error) {
+func (c *Client) ScanRegions(ctx context.Context, startKey, endKey []byte, limit int, _ ...opt.GetRegionOption) ([]*router.Region, error) {
 	ctx = withReqID(ctx)
 	reqID := getReqID(ctx)
 	if limit <= 0 {
@@ -537,7 +539,7 @@ func (c *Client) ScanRegions(ctx context.Context, startKey, endKey []byte, limit
 }
 
 // GetAllStores returns all stores in the cluster except tombstone stores.
-func (c *Client) GetAllStores(context.Context, ...pd.GetStoreOption) ([]*metapb.Store, error) {
+func (c *Client) GetAllStores(context.Context, ...opt.GetStoreOption) ([]*metapb.Store, error) {
 	return c.getAllStores(), nil
 }
 
