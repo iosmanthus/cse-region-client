@@ -12,6 +12,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	"github.com/tikv/client-go/v2/tikv"
 	pd "github.com/tikv/pd/client"
+	"github.com/tikv/pd/client/pkg/caller"
 )
 
 var (
@@ -29,7 +30,7 @@ type cseSuite struct {
 }
 
 func (s *cseSuite) SetupTest() {
-	pdCli, err := pd.NewClient(strings.Split(*pdAddrs, ","), pd.SecurityOption{})
+	pdCli, err := pd.NewClient(caller.TestComponent, strings.Split(*pdAddrs, ","), pd.SecurityOption{})
 	s.Nil(err)
 	pdCli, err = cse.NewClient(pdCli, nil, nil)
 	s.Nil(err)
@@ -54,7 +55,7 @@ func (s *cseSuite) TestGetRegion() {
 }
 
 func BenchmarkGetRegionByPD(b *testing.B) {
-	pdCli, err := pd.NewClient(strings.Split(*pdAddrs, ","), pd.SecurityOption{})
+	pdCli, err := pd.NewClient(caller.TestComponent, strings.Split(*pdAddrs, ","), pd.SecurityOption{})
 	if err != nil {
 		b.Fatal(err)
 	}
@@ -74,7 +75,7 @@ func BenchmarkGetRegionByPD(b *testing.B) {
 }
 
 func BenchmarkGetRegionByCSE(b *testing.B) {
-	pdCli, err := pd.NewClient(strings.Split(*pdAddrs, ","), pd.SecurityOption{})
+	pdCli, err := pd.NewClient(caller.TestComponent, strings.Split(*pdAddrs, ","), pd.SecurityOption{})
 	if err != nil {
 		b.Fatal(err)
 	}

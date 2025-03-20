@@ -8,6 +8,6 @@ func TestRepeatCloseStore(t *testing.T) {
 	s := &store{
 		breaker: newAsyncBreaker(settings{}),
 	}
-	s.Close()
-	s.Close()
+	s.breaker.Close()
+	s.breaker.Close()
 }

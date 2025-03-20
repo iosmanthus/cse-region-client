@@ -23,6 +23,8 @@ import (
 	"github.com/pingcap/log"
 	"github.com/sony/gobreaker"
 	pd "github.com/tikv/pd/client"
+	"github.com/tikv/pd/client/clients/router"
+	"github.com/tikv/pd/client/opt"
 	"go.uber.org/zap"
 )
 
@@ -102,42 +104,42 @@ func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOpt
 	return f, nil
 }
 
-func (f *ClientWithFallback) GetRegion(ctx context.Context, key []byte, opts ...pd.GetRegionOption) (*pd.Region, error) {
+func (f *ClientWithFallback) GetRegion(ctx context.Context, key []byte, opts ...opt.GetRegionOption) (*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetRegion(ctx, key, opts...)
 	})
 	if err == nil {
-		return resp.(*pd.Region), nil
+		return resp.(*router.Region), nil
 	}
 	return f.cse.GetRegion(ctx, key, opts...)
 }
 
-func (f *ClientWithFallback) GetPrevRegion(ctx context.Context, key []byte, opts ...pd.GetRegionOption) (*pd.Region, error) {
+func (f *ClientWithFallback) GetPrevRegion(ctx context.Context, key []byte, opts ...opt.GetRegionOption) (*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetPrevRegion(ctx, key, opts...)
 	})
 	if err == nil {
-		return resp.(*pd.Region), nil
+		return resp.(*router.Region), nil
 	}
 	return f.cse.GetPrevRegion(ctx, key, opts...)
 }
 
-func (f *ClientWithFallback) GetRegionByID(ctx context.Context, regionID uint64, opts ...pd.GetRegionOption) (*pd.Region, error) {
+func (f *ClientWithFallback) GetRegionByID(ctx context.Context, regionID uint64, opts ...opt.GetRegionOption) (*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetRegionByID(ctx, regionID, opts...)
 	})
 	if err == nil {
-		return resp.(*pd.Region), nil
+		return resp.(*router.Region), nil
 	}
 	return f.cse.GetRegionByID(ctx, regionID, opts...)
 }
 
-func (f *ClientWithFallback) ScanRegions(ctx context.Context, key, endKey []byte, limit int, opts ...pd.GetRegionOption) ([]*pd.Region, error) {
+func (f *ClientWithFallback) ScanRegions(ctx context.Context, key, endKey []byte, limit int, opts ...opt.GetRegionOption) ([]*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.ScanRegions(ctx, key, endKey, limit, opts...)
 	})
 	if err == nil {
-		return resp.([]*pd.Region), nil
+		return resp.([]*router.Region), nil
 	}
 	return f.cse.ScanRegions(ctx, key, endKey, limit, opts...)
 }
@@ -152,7 +154,7 @@ func (f *ClientWithFallback) GetStore(ctx context.Context, storeID uint64) (*met
 	return f.cse.GetStore(ctx, storeID)
 }
 
-func (f *ClientWithFallback) GetAllStores(ctx context.Context, opts ...pd.GetStoreOption) ([]*metapb.Store, error) {
+func (f *ClientWithFallback) GetAllStores(ctx context.Context, opts ...opt.GetStoreOption) ([]*metapb.Store, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetAllStores(ctx, opts...)
 	})
