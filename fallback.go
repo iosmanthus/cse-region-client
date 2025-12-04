@@ -17,6 +17,7 @@ package cse
 import (
 	"context"
 	"crypto/tls"
+	"errors"
 	"time"
 
 	"github.com/pingcap/kvproto/pkg/metapb"
@@ -72,6 +73,18 @@ func probePD(name string, client pd.Client, timeout time.Duration) error {
 	return err
 }
 
+func isCBActivated(err error) bool {
+	if err == nil {
+		return false
+	}
+	if errors.Is(err, errUnavailable) ||
+		errors.Is(err, gobreaker.ErrOpenState) ||
+		errors.Is(err, gobreaker.ErrTooManyRequests) {
+		return true
+	}
+	return false
+}
+
 func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOptions) (pd.Client, error) {
 	if cbOpt == nil {
 		cbOpt = defaultCBOptions()
@@ -108,60 +121,60 @@ func (f *ClientWithFallback) GetRegion(ctx context.Context, key []byte, opts ...
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetRegion(ctx, key, opts...)
 	})
-	if err == nil {
-		return resp.(*router.Region), nil
+	if isCBActivated(err) {
+		return f.cse.GetRegion(ctx, key, opts...)
 	}
-	return f.cse.GetRegion(ctx, key, opts...)
+	return resp.(*router.Region), err
 }
 
 func (f *ClientWithFallback) GetPrevRegion(ctx context.Context, key []byte, opts ...opt.GetRegionOption) (*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetPrevRegion(ctx, key, opts...)
 	})
-	if err == nil {
-		return resp.(*router.Region), nil
+	if isCBActivated(err) {
+		return f.cse.GetPrevRegion(ctx, key, opts...)
 	}
-	return f.cse.GetPrevRegion(ctx, key, opts...)
+	return resp.(*router.Region), err
 }
 
 func (f *ClientWithFallback) GetRegionByID(ctx context.Context, regionID uint64, opts ...opt.GetRegionOption) (*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetRegionByID(ctx, regionID, opts...)
 	})
-	if err == nil {
-		return resp.(*router.Region), nil
+	if isCBActivated(err) {
+		return f.cse.GetRegionByID(ctx, regionID, opts...)
 	}
-	return f.cse.GetRegionByID(ctx, regionID, opts...)
+	return resp.(*router.Region), err
 }
 
 func (f *ClientWithFallback) ScanRegions(ctx context.Context, key, endKey []byte, limit int, opts ...opt.GetRegionOption) ([]*router.Region, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.ScanRegions(ctx, key, endKey, limit, opts...)
 	})
-	if err == nil {
-		return resp.([]*router.Region), nil
+	if isCBActivated(err) {
+		return f.cse.ScanRegions(ctx, key, endKey, limit, opts...)
 	}
-	return f.cse.ScanRegions(ctx, key, endKey, limit, opts...)
+	return resp.([]*router.Region), err
 }
 
 func (f *ClientWithFallback) GetStore(ctx context.Context, storeID uint64) (*metapb.Store, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetStore(ctx, storeID)
 	})
-	if err == nil {
-		return resp.(*metapb.Store), nil
+	if isCBActivated(err) {
+		return f.cse.GetStore(ctx, storeID)
 	}
-	return f.cse.GetStore(ctx, storeID)
+	return resp.(*metapb.Store), nil
 }
 
 func (f *ClientWithFallback) GetAllStores(ctx context.Context, opts ...opt.GetStoreOption) ([]*metapb.Store, error) {
 	resp, err := f.breaker.Execute(func() (interface{}, error) {
 		return f.Client.GetAllStores(ctx, opts...)
 	})
-	if err == nil {
-		return resp.([]*metapb.Store), nil
+	if isCBActivated(err) {
+		return f.cse.GetAllStores(ctx, opts...)
 	}
-	return f.cse.GetAllStores(ctx, opts...)
+	return resp.([]*metapb.Store), err
 }
 
 func (f *ClientWithFallback) Close() {
