@@ -169,11 +169,12 @@ func (c *Client) updateStores(stores []*metapb.Store) {
 		}
 
 		settings := settings{
-			Name:          fmt.Sprintf("store-%d", id),
-			Interval:      c.cbOpt.Interval,
-			Timeout:       c.cbOpt.Timeout,
-			ProbeInterval: c.cbOpt.ProbeInterval,
-			ReadyToTrip:   c.cbOpt.ReadyToTrip,
+			Name:             fmt.Sprintf("store-%d", id),
+			Interval:         c.cbOpt.Interval,
+			Timeout:          c.cbOpt.Timeout,
+			ProbeMinInterval: c.cbOpt.ProbeMinInterval,
+			ProbeMaxInterval: c.cbOpt.ProbeMaxInterval,
+			ReadyToTrip:      c.cbOpt.ReadyToTrip,
 			Probe: func(name string) error {
 				addr := s.GetStatusAddress()
 				log.Warn("store is marked as unavailable, probing",
