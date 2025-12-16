@@ -16,6 +16,7 @@ package cse
 
 import (
 	"errors"
+	"math/rand/v2"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -38,26 +39,32 @@ type asyncBreaker struct {
 	done  chan struct{}
 	once  sync.Once
 
-	probeInterval time.Duration
+	probeMinInterval time.Duration
+	probeMaxInterval time.Duration
 }
 
 type settings struct {
-	Name          string
-	MaxRequests   uint32
-	Interval      time.Duration
-	Timeout       time.Duration
-	ProbeInterval time.Duration
-	ReadyToTrip   func(counts gobreaker.Counts) bool
-	IsSuccessful  func(err error) bool
-	Probe         func(string) error
+	Name             string
+	MaxRequests      uint32
+	Interval         time.Duration
+	Timeout          time.Duration
+	ProbeMinInterval time.Duration
+	ProbeMaxInterval time.Duration
+	ReadyToTrip      func(counts gobreaker.Counts) bool
+	IsSuccessful     func(err error) bool
+	Probe            func(string) error
 }
 
 func newAsyncBreaker(s settings) *asyncBreaker {
+	if s.ProbeMinInterval < 0 || s.ProbeMaxInterval < 0 || s.ProbeMinInterval > s.ProbeMaxInterval {
+		panic("invalid probe interval settings")
+	}
 	breaker := &asyncBreaker{
 		state: closed,
 		done:  make(chan struct{}, 1),
 
-		probeInterval: s.ProbeInterval,
+		probeMinInterval: s.ProbeMinInterval,
+		probeMaxInterval: s.ProbeMaxInterval,
 	}
 	cbs := gobreaker.Settings{
 		Name:         s.Name,
@@ -91,13 +98,19 @@ func (b *asyncBreaker) openWith(probe func(string) error) bool {
 	return success
 }
 
+func (b *asyncBreaker) nextProbeInterval() time.Duration {
+	return b.probeMinInterval + time.Duration(rand.Int64N(int64(b.probeMaxInterval)-int64(b.probeMinInterval)))
+}
+
 func (b *asyncBreaker) probeLoop(probe func(string) error) {
-	ticker := time.NewTicker(b.probeInterval)
+	ticker := time.NewTicker(b.nextProbeInterval())
+	defer ticker.Stop()
 	for {
 		select {
 		case <-ticker.C:
 			err := probe(b.cb.Name())
 			if err != nil {
+				ticker.Reset(b.nextProbeInterval())
 				continue
 			}
 			atomic.CompareAndSwapUint32(&b.state, open, closed)
