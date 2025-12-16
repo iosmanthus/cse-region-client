@@ -41,18 +41,20 @@ type ClientWithFallback struct {
 
 // CBOptions is a wrapper for gobreaker settings.
 type CBOptions struct {
-	Interval      time.Duration
-	Timeout       time.Duration
-	ProbeInterval time.Duration
-	ReadyToTrip   func(counts gobreaker.Counts) bool
+	Interval         time.Duration
+	Timeout          time.Duration
+	ProbeMinInterval time.Duration
+	ProbeMaxInterval time.Duration
+	ReadyToTrip      func(counts gobreaker.Counts) bool
 }
 
 func defaultCBOptions() *CBOptions {
 	return &CBOptions{
-		Interval:      5 * time.Second,
-		Timeout:       1 * time.Second,
-		ProbeInterval: 1 * time.Second,
-		ReadyToTrip:   ifMostFailures,
+		Interval:         10 * time.Second,
+		Timeout:          2 * time.Second,
+		ProbeMinInterval: 5 * time.Second,
+		ProbeMaxInterval: 15 * time.Second,
+		ReadyToTrip:      ifMostFailures,
 	}
 }
 
@@ -100,11 +102,12 @@ func NewClientWithFallback(client pd.Client, tlsConfig *tls.Config, cbOpt *CBOpt
 	f.cse = cse
 
 	s := settings{
-		Name:          "pd-fallback-client",
-		Interval:      cbOpt.Interval,
-		Timeout:       cbOpt.Timeout,
-		ProbeInterval: cbOpt.ProbeInterval,
-		ReadyToTrip:   cbOpt.ReadyToTrip,
+		Name:             "pd-fallback-client",
+		Interval:         cbOpt.Interval,
+		Timeout:          cbOpt.Timeout,
+		ProbeMinInterval: cbOpt.ProbeMinInterval,
+		ProbeMaxInterval: cbOpt.ProbeMaxInterval,
+		ReadyToTrip:      cbOpt.ReadyToTrip,
 		Probe: func(name string) error {
 			log.Warn("origin pd client unavailable, start probing", zap.String("name", name))
 			return probePD(name, client, 1*time.Second)
